@@ -1,0 +1,16 @@
+﻿<Properties StartupConfiguration="{717DCB06-E3BB-4935-93F9-BFB1386E7734}|Default">
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.ItemProperties.TeacherHiring.Android PreferredExecutionTarget="Android.VisualStudio_android-23_x86_tablet" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="TeacherHiring\TeacherHiring\ViewModel\InformacionViewModel.cs">
+    <Files>
+      <File FileName="TeacherHiring\TeacherHiring\ViewModel\LoginViewModel.cs" Line="43" Column="5" />
+      <File FileName="TeacherHiring\TeacherHiring\Views\InformacionPage.xaml.cs" Line="1" Column="1" />
+      <File FileName="TeacherHiring\TeacherHiring\ViewModel\InformacionViewModel.cs" Line="42" Column="3" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
+  <MultiItemStartupConfigurations />
+</Properties>

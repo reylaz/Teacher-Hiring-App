@@ -1,0 +1,142 @@
+﻿using System;
+using System.Diagnostics;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Text;
+using System.Threading.Tasks;
+using Newtonsoft.Json;
+using System.Collections.Generic;
+using System.IO;
+using TeacherHiring.DataBase.Access;
+
+namespace TeacherHiring
+{
+	public class teacherAPI
+	{
+        const string restURL = "http://online.cuprum.com/webapixamarin/api/{0}";
+        HttpClient _client;
+
+        public teacherAPI()
+		{
+            _client = new HttpClient();
+        }
+        public async Task<DataBase.Model.Usuario> Authenticate(DataBase.Model.Usuario Usuario)
+        {
+            var uri = new Uri(string.Format(restURL, "Authenticate/Authenticate/"));
+            try
+            {
+                var json = JsonConvert.SerializeObject(Usuario);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+                HttpResponseMessage response = null;
+                response = await _client.PostAsync(uri, content);
+                if (response.IsSuccessStatusCode)
+                {
+                    var token = response.Headers.GetValues("Token");
+                    var tokenexpiry = response.Headers.GetValues("TokenExpiry");
+                    Usuario.Token = token.First();
+                    Usuario.TokenExpiry = new DateTime(long.Parse(tokenexpiry.First().ToString()));
+                }
+
+                uri = new Uri(string.Format(restURL, "Usuario/GetDataPerson?token=" + Usuario.Token));
+                HttpRequestMessage message = new HttpRequestMessage(HttpMethod.Get, uri);
+                UsuarioDataAccess dataAccess = new UsuarioDataAccess();
+                message.Headers.Add("Token", Usuario.Token);
+                 response = await _client.SendAsync(message);
+                var result = JsonConvert.DeserializeObject<DataBase.Model.Usuario>(response.Content.ReadAsStringAsync().Result);
+                
+                    DataBase.Model.Usuario _user = new DataBase.Model.Usuario();
+                    _user.Id = result.Id;
+                    _user.Nombre = result.Nombre;
+                    _user.ClaveAcceso = result.ClaveAcceso;
+                    _user.Contrasena = result.resultContrasena;
+                    _user.IdTipoPerson = result.IdTipoPerson;
+                    _user.ClientCreatedOn = result.ClientCreatedOn;
+                    _user.ClientID = result.ClientID;
+                    _user.ClientSecret = result.ClientSecret;
+                    dataAccess.SaveUser(_user);
+                    Usuario = _user;
+                
+
+            }
+            catch (WebException e)
+            {
+                HttpWebResponse response = (HttpWebResponse)e.Response;
+                if (response != null)
+                {
+                    if (response.StatusCode == HttpStatusCode.Unauthorized)
+                    {
+                        string challenge = null;
+                        //challenge = response.GetResponseHeader("WWW-Authenticate");
+                        //if (challenge != null)
+                        //  Debug.WriteLine("\nThe following challenge was raised by the server:{0}", challenge);
+                    }
+                    else
+                        Debug.WriteLine("\nThe following WebException was raised : {0}", e.Message);
+                }
+                else
+                    Debug.WriteLine("\nResponse Received from server was null");
+
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine("\nThe following Exception was raised : {0}", e.Message);
+            }
+            finally
+            {
+                _client.Dispose();
+            }
+            return Usuario;
+        }
+        public async Task<List<DataBase.Model.Materia>> GetListMaterias(string Token)
+        {
+            var uri = new Uri(string.Format(restURL, "Materia/GetListMateriaApps"));
+            HttpRequestMessage message = new HttpRequestMessage(HttpMethod.Get, uri);
+            MateriaDataAccess dataAccess = new MateriaDataAccess();
+            message.Headers.Add("Token", Token);
+            HttpResponseMessage response = await _client.SendAsync(message);
+            var result = JsonConvert.DeserializeObject<dynamic>(response.Content.ReadAsStringAsync().Result);
+            List<DataBase.Model.Materia> materias = new List<DataBase.Model.Materia>();
+            DataBase.Model.Materia materia = new DataBase.Model.Materia();
+            try
+            {
+                foreach (var m in result)
+                {
+                    materia = new DataBase.Model.Materia();
+                    materia.MateriaId = m.MateriaId;
+                    materia.Descripcion = m.Descripcion;
+                    materia.Disponibles = m.Disponibles;
+                    dataAccess.SaveMateria(materia);
+                    materias.Add(materia);
+                }
+            }
+            catch (WebException e)
+            {
+                if (response != null)
+                {
+                    if (response.StatusCode == HttpStatusCode.Unauthorized)
+                    {
+                        string challenge = null;
+                        //challenge = response.GetResponseHeader("WWW-Authenticate");
+                        //if (challenge != null)
+                        //  Debug.WriteLine("\nThe following challenge was raised by the server:{0}", challenge);
+                    }
+                    else
+                        Debug.WriteLine("\nThe following WebException was raised : {0}", e.Message);
+                }
+                else
+                    Debug.WriteLine("\nResponse Received from server was null");
+
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine("\nThe following Exception was raised : {0}", e.Message);
+            }
+            finally
+            {
+                _client.Dispose();
+            }
+            return materias;
+        }
+    }
+}
